@@ -29,7 +29,7 @@ For each batch, call Agent with `subagent_type: "general-purpose"`, `model: "opu
 - What must keep working (shipped clients, older versions, production), and anything that needs the user's action or decision first, such as a manual server step. For a fix that runs into one of these, the agent takes the narrowest safe version or skips it, and reports it.
 - From the second batch on: the earlier batches' commit hashes, to build on and not undo.
 - Paths of the project's instruction files (`CLAUDE.md`, `AGENTS.md`) to read and follow.
-- To verify its own work, then commit it on the current branch: only the files it changed, leaving any other uncommitted work alone, following the project's commit conventions, with no push and no new branch or worktree. If this is not a git repository, it skips the commit.
+- To verify its own work, then commit it on the current branch: only the files it changed, leaving any other uncommitted work alone, following the project's commit conventions, with no push unless the user asked for one, and no new branch or worktree. If this is not a git repository, it skips the commit.
 - To report: the commit hash, one line per issue (fixed or skipped), anything it could not verify, any choice that departed from the brief, and decisions left for the user.
 - For the last batch only: to also run the project's full test suite and checks, fix failures these batches caused, and report any others.
 
