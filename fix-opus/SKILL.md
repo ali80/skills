@@ -15,6 +15,8 @@ If this is empty, use the request the user just made. If the conversation holds 
 
 You already understand the problems; Opus does the fixing. Your tokens cost far more than its tokens, so spend them only on briefs. Do not fix anything yourself, and do not review or re-check the agents' work.
 
+If an item still needs a design decision, make it before briefing, looking at the code only as far as that decision needs, and put the decision in the brief.
+
 ## 1. Batch
 
 Group the issues so that those touching the same files or area share a batch, and order the batches so that a fix another one depends on comes first. Prefer a few batches over one per issue: every new agent pays to read the code again. Tell the user the batches in a few lines and continue.
