@@ -1,6 +1,6 @@
 ---
 name: plan-fable
-description: Have a Fable subagent decide the approach at medium effort, then implement and validate it in the main session.
+description: Have a Fable subagent decide the approach at medium effort, then, once you approve, implement and validate it in the main session.
 argument-hint: <task description>
 disable-model-invocation: true
 ---
@@ -21,7 +21,7 @@ Your first tool call is Agent with `subagent_type: "general-purpose"`, `model: "
 
 Its prompt contains:
 
-- The task, verbatim. No summary, hypothesis or preferred solution of yours.
+- The task, verbatim, leaving out only instructions meant for you, such as whether to wait for approval. No summary, hypothesis or preferred solution of yours.
 - Facts from this conversation the planner cannot see: constraints, errors, files the user named, earlier decisions.
 - Paths of the project's instruction files (`CLAUDE.md`, `AGENTS.md`) to read and follow.
 - That it is read-only: it modifies nothing.
@@ -34,9 +34,11 @@ Return format: the plan is for a capable implementer who will work out the edits
 3. **Validation**: what must be shown to work and what must not regress.
 4. **Questions for the user**: if any, only those whose answer would change the approach, each with the assumption made meanwhile.
 
-## 2. Check the plan
+## 2. Show the plan
 
-Give the user the plan in a few lines and continue, unless it has questions for the user or a destructive or irreversible step; ask about those first.
+Give the user the plan, with any questions it has for them, and wait for their approval. If the user said to implement without approval, continue, unless the plan has questions for them or a destructive or irreversible step; ask about those first.
+
+If their answer or feedback changes the approach, send it to the planner with SendMessage for a revised plan; apply smaller changes yourself.
 
 ## 3. Implement and validate here
 
