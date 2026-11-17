@@ -1,13 +1,14 @@
 # skills
 
-Two Claude Code skills for splitting work between models so the expensive one does less. Fable decides what to do; Opus does the editing.
+Skills for Claude Code. `plan-fable` and `fix-opus` split work between models so the expensive one does less: Fable decides what to do; Opus does the editing. `log-task` records a finished session as a task in AOps, and also works in Codex.
 
 | Skill | Run it in | What it does |
 | --- | --- | --- |
 | [`plan-fable`](plan-fable/SKILL.md) | an Opus session | Borrows Fable to plan a task, then implements the plan in the main session. |
 | [`fix-opus`](fix-opus/SKILL.md) | a Fable session | Hands work the session already understands to Opus subagents, one batch at a time. |
+| [`log-task`](log-task/SKILL.md) | any session, at the end of a task | Records the session's work in AOps as a finished task, with who did it and how long it took. |
 
-Both use medium effort for the subagent, and both run only when you type the command; Claude never starts them on its own.
+`plan-fable` and `fix-opus` use medium effort for the subagent. All three run only when you type the command; Claude never starts them on its own.
 
 ## plan-fable
 
@@ -36,6 +37,21 @@ Use it when you are on Fable and the session already knows what needs doing, for
 
 To keep your own order, say so: `/fix-opus do steps 1 to 6 in this order, one batch per step`.
 
+## log-task
+
+```
+/log-task [corrections]
+```
+
+Use it at the end of a task done in Claude Code or Codex, when the work should also show up in AOps tasks.
+
+1. `session-time.mjs` reads the session's own transcript and adds up the stretches of activity. Gaps longer than 10 minutes count as time away.
+2. The session drafts a title, a short description, the owner, a related AOps record if there is one, and a tag for the tool used.
+3. You see the draft and can correct anything, including the duration. Nothing is written before you agree.
+4. It creates the task, records one work session per stretch of activity, and marks the task done. Setting past times on a work session needs your approval in AOps; the corrections arrive as one batch.
+
+It needs Node.js and a connection to the AOps agent gateway: the `aops` MCP server, or `pnpm aops` in an AOps checkout. In Codex, ask for it by name ("use the log-task skill").
+
 ## Install
 
 Copy a skill's folder into your user skills directory, then start a new Claude Code session:
@@ -43,4 +59,6 @@ Copy a skill's folder into your user skills directory, then start a new Claude C
 - macOS and Linux: `~/.claude/skills/`
 - Windows: `%USERPROFILE%\.claude\skills\`
 
-You need access to the Fable and Opus models in Claude Code.
+For Codex, copy `log-task` into `~/.codex/skills/` (`%USERPROFILE%.codexskills` on Windows) and start a new session.
+
+`plan-fable` and `fix-opus` need access to the Fable and Opus models in Claude Code.
