@@ -48,7 +48,8 @@ Use it at the end of a task done in Claude Code or Codex, when the work should a
 1. `session-time.mjs` reads the session's own transcript and adds up the stretches of activity. Gaps longer than 10 minutes count as time away.
 2. The session drafts a title, a short description, the owner, a related AOps record if there is one, and a tag for the tool used.
 3. You see the draft and can correct anything, including the duration. Nothing is written before you agree.
-4. It creates the task, records one work session per stretch of activity, and marks the task done. Setting past times on a work session needs your approval in AOps; the corrections arrive as one batch.
+4. It creates the task, records one work session per stretch of activity, and marks the task done. On an AOps without `tasks.logFocusSession`, setting the past times needs your approval there; the corrections arrive as one batch.
+5. Run it again later in the same session and it adds the new time to the same task instead of creating another.
 
 It needs Node.js and a connection to the AOps agent gateway: the `aops` MCP server, or `pnpm aops` in an AOps checkout. In Codex, ask for it by name ("use the log-task skill").
 
