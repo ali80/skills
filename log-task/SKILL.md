@@ -25,7 +25,7 @@ node <this skill's folder>/session-time.mjs --marker log-task-<8 random characte
 
 The marker is how the script finds this session's transcript: your own command line is written to it. If the script answers that the marker is not in any transcript yet, run the exact same command once more.
 
-It returns `tool` (`claude` or `codex`), `activeMinutes` and the work `blocks` (start and end of each stretch of activity). Gaps longer than 10 minutes are treated as time away and not counted.
+It returns `tool` (`claude` or `codex`), `sessionId`, `activeMinutes` and the work `blocks` (start and end of each stretch of activity). Gaps longer than 10 minutes are treated as time away and not counted.
 
 - If this session covered several tasks and only the latest is being logged, or an earlier part was already logged, add `--since <ISO instant>` for where this task began.
 - If the script fails for another reason, do not guess a duration: ask the user how long it took.
@@ -40,10 +40,10 @@ Draft these from the conversation, not from the script:
   - two or three sentences on what was done and why;
   - what is left or not verified, if anything;
   - for code work: the repository, the commit hashes or branch, and the released version if there was one;
-  - a last line: `Done with <Claude Code or Codex> · <N> min active over <M> work blocks`.
-- **Owner**: the person the AOps token acts as (`you.user` from `aops_catalog()`), unless the user names someone else; then take the id from `tasks.listUsers`.
+  - a last line: `Done with <Claude Code or Codex> · <N> min active over <M> work blocks`, with N the active minutes rounded up to a whole minute.
+- **Owner**: the person the AOps token acts as (`you.user` from `aops_catalog()`), unless the user names someone else. Either way that is a username: look up its user id in `tasks.listUsers`, because the task needs the id.
 - **Related record**: only when the work was about one specific AOps record (a customer, sales order, work order, ticket, item). Find it with `aops_find` and pass it as `relatedTarget: { entityType, entityId }`. Code changes have no related record.
-- **Tag**: the tool's name, `claude` or `codex` (`tasks.createTag({ name })` returns the existing tag when there is one).
+- **Tag**: the tool's name, `claude` or `codex`. Do not create it yet; that is a write and belongs to step 4.
 
 Never put secrets, tokens, passwords or customer phone numbers and addresses in the title or description.
 
@@ -53,16 +53,17 @@ Show the draft once: title, description, owner, related record, total minutes an
 
 ## 4. Save it
 
-Use one `idempotencyKey` prefix for the whole run, `log-task:<session id>:<first block start>`, with a suffix per call, so a retry never creates a second task. Give every write a `reason` such as "Logging finished <tool> work: <title>".
+Use one `idempotencyKey` prefix for the whole run, `log-task:<sessionId from the script>:<first block start>`, with a suffix per call (`:tag`, `:create`, `:start-1`, …), so a retry never creates a second task. Give every write a `reason` such as "Logging finished <tool> work: <title>".
 
-1. `tasks.create` with `title`, `descriptionMarkdown`, `assigneeUserId`, `estimateMinutes` (the active minutes, rounded up, at least 1), `tagIds`, and `relatedTarget` when there is one.
-2. Tracked time, only when the owner is the person the token acts as (timers always belong to that person). For each block:
+1. `tasks.createTag({ name })` with the tool's name. It returns the existing tag when there is one; keep its id.
+2. `tasks.create` with `title`, `descriptionMarkdown`, `assigneeUserId`, `estimateMinutes` (the same whole minutes as the description line, at least 1), `tagIds`, and `relatedTarget` when there is one.
+3. Tracked time, only when the owner is the person the token acts as (timers always belong to that person). For each block:
    1. `tasks.startFocus({ taskId })`, then `tasks.stopFocus({ id })` with the returned session id.
    2. `tasks.correctFocusSession({ id, startedAt, endedAt, note: "<tool> session time" })` with the block's instants. This write waits for a person's approval: send every block's correction with the same `groupKey` (the key prefix), so the user approves them once.
-3. `tasks.changeStatus({ id, status: "done" })`.
+4. `tasks.changeStatus({ id, status: "done" })`.
 
-If the owner is someone else, skip step 2: the time stays in the description and the estimate only. Say so.
+If the owner is someone else, skip step 3: the time stays in the description and the estimate only. Say so.
 
 ## 5. Report
 
-Give the task link, the minutes recorded, and the approval link (`batchUrl` or `approvalUrl`) for the time correction, saying that tracked time shows as near zero until it is approved. If any call failed, say which and what was saved.
+Give the task link, the minutes recorded, and the approval link for the time correction (`batchUrl` when the response has one, otherwise `approvalUrl`), saying that tracked time shows as near zero until it is approved. No response carries the task link: it is `/tasks/<task id>` on the same host as the approval link. If any call failed, say which and what was saved.
